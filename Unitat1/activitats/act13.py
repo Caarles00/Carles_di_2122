@@ -33,8 +33,8 @@ while seguir:
     except ErrorEnterMassaMenut as emm:
         print(emm.msg)
         print()
-    #except ValueError():
-    #    break
+    except ValueError():
+        print("Error en el valor introduit")
 
         
         
