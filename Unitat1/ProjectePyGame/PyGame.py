@@ -21,6 +21,9 @@ QUIT
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 
+#ruta_base = os.path.dirname(_file_)
+#ruta_a_recurs = os.path.join(ruta_base, "DI/Utils")
+
 # Define a player object by extending pygame.sprite.Sprite
 # The surface drawn on the screen is now an attribute of 'player'
 class Player(pygame.sprite.Sprite):
@@ -46,11 +49,11 @@ class Player(pygame.sprite.Sprite):
             self.rect.bottom = SCREEN_HEIGHT
 
     try:
-        ruta_base = os.path.dirname(__file__)
+        ruta_base = os.path.dirname(_file_)
         ruta_a_recurs = os.path.join(ruta_base, "jet.png")
 
-        def __init__(self):
-            super(Player, self).__init__()
+        def _init_(self):
+            super(Player, self)._init_()
             self.surf = pygame.image.load("jet.png").convert()
             self.surf.set_colorkey((255, 255, 255), RLEACCEL)
             self.rect = self.surf.get_rect()
@@ -61,10 +64,10 @@ class Player(pygame.sprite.Sprite):
 # The surface you draw on the screen is now an attribute of 'enemy'
 class Enemy(pygame.sprite.Sprite):
     try:
-        ruta_base = os.path.dirname(__file__)
+        ruta_base = os.path.dirname(_file_)
         ruta_a_recurs = os.path.join(ruta_base, "missile.png")
-        def __init__(self):
-            super(Enemy, self).__init__()
+        def _init_(self):
+            super(Enemy, self)._init_()
             self.surf = pygame.image.load("missile.png").convert()
             self.surf.set_colorkey((255, 255, 255), RLEACCEL)
             self.rect = self.surf.get_rect(
@@ -86,22 +89,40 @@ class Enemy(pygame.sprite.Sprite):
 
 class Cloud(pygame.sprite.Sprite):
     try:
-        ruta_base = os.path.dirname(__file__)
+        ruta_base = os.path.dirname(_file_)
         ruta_a_recurs = os.path.join(ruta_base, "cloud.png")
 
-        def __init__(self):
-            super(Cloud, self).__init__()
+        def _init_(self):
+            super(Cloud, self)._init_()
             self.surf = pygame.image.load("cloud.png").convert()
             self.surf.set_colorkey((255, 255, 255), RLEACCEL)
-            self.rect = self.surf.get_rect()
+            self.rect = self.surf.get_rect(
+                center=(
+                    random.randint(SCREEN_WIDTH + 50, SCREEN_HEIGHT + 100),
+                    random.randint(0, SCREEN_HEIGHT)
+                )
+            )
     except FileExistsError:
         print("El fitxer no existeix")
 
     def update(self):
         self.rect.move_ip(-self.speed, 5)
 
+#Setupforsounds. Defaultsaregood.
+pygame.mixer.init()
+
 # Initialize pygame
 pygame.init()
+
+#Load and play background music
+pygame.mixer.music.load("Apoxode_-_Electric_1.ogg")
+pygame.mixer.music.play(loops=-1)
+
+#Load all sound files
+#Soundsources:Jon Fincher
+move_up_sound=pygame.mixer.Sound("Rising_putter.ogg")
+move_down_sound=pygame.mixer.Sound("Falling_putter.ogg")
+collision_sound=pygame.mixer.Sound("Collision.ogg")
 
 # Create the screen object
 # The size is determined by the constant SCREEN_WIDTH and SCREEN_HEIGHT
@@ -178,4 +199,6 @@ while running:
 # Get the set of keys pressed and check for user input
 pressed_keys = pygame.key.get_pressed()
 
-
+#Alldone!Stopandquitthemixer.
+pygame.mixer.music.stop()
+pygame.mixer.quit()
