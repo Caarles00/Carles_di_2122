@@ -1,7 +1,7 @@
-# Import random for random numbers
 import random
 import os
 import time
+import math
 
 # Import the pygame module
 import pygame
@@ -67,7 +67,8 @@ class Enemy(pygame.sprite.Sprite):
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.rect = self.surf.get_rect(
             center=(
-                random.randint(SCREEN_WIDTH + 20, SCREEN_WIDTH + 100),                    random.randint(0, SCREEN_HEIGHT),
+                random.randint(SCREEN_WIDTH + 20, SCREEN_WIDTH + 100),                    
+                random.randint(0, SCREEN_HEIGHT),
             )
         )
         self.speed = random.randint(5, 20)
@@ -105,16 +106,12 @@ pygame.mixer.init()
 # Initialize pygame
 pygame.init()
 
-#Load and play background music
-pygame.mixer.music.load(os.path.join(ruta_a_recurs, "Apoxode_-_Electric_1.ogg"))
-pygame.mixer.music.play(loops=-1)
 
 #Load all sound files
 #Soundsources:Jon Fincher
 move_up_sound=pygame.mixer.Sound(os.path.join(ruta_a_recurs, "Rising_putter.ogg"))
 move_down_sound=pygame.mixer.Sound(os.path.join(ruta_a_recurs, "Falling_putter.ogg"))
 collision_sound=pygame.mixer.Sound(os.path.join(ruta_a_recurs, "Collision.ogg"))
-
 
 # Create the screen object
 # The size is determined by the constant SCREEN_WIDTH and SCREEN_HEIGHT
@@ -149,8 +146,41 @@ running = True
 punts = 0 
 level = 1
 
+
+text_intro = pygame.font.SysFont("console", 30, True)
+text_result = pygame.font.SysFont("console", 80, True)
+estar_en_intro = True
+
+musica_intro = pygame.mixer.music.load(os.path.join(ruta_a_recurs, "intro.ogg"))
+pygame.mixer.music.play(loops=-1)
+
+
+#Pantalla de benvinguda
+while(estar_en_intro):
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            quit()
+
+    screen.fill((0,0,0))
+    instrucciones = text_intro.render("Press p to play", 1, (0, 255, 0))
+    screen.blit(instrucciones, (250, 500))
+
+    tecla = pygame.key.get_pressed()
+
+    if tecla[pygame.K_p]:
+        estar_en_intro = False
+        running = True
+    
+    pygame.display.update()
+
+#Load and play background music
+pygame.mixer.music.stop()
+pygame.mixer.music.load(os.path.join(ruta_a_recurs, "Apoxode_-_Electric_1.ogg"))
+pygame.mixer.music.play(loops=-1)
+
 # Main loop
 while running:
+
     # Look at every event in the queue
     for event in pygame.event.get():
         # Did the user hit a key?
@@ -191,22 +221,22 @@ while running:
     # Fill the screen with blue
     screen.fill((135, 206, 250))
 
-    #Add 20 points to score when the enemies passes the left edge of the screen
+    #Add 10 points to score when the enemies passes the left edge of the screen
     for i in enemies:
         if i.rect.right < 10:
             punts += 10
             if(punts%500 == 0):
                 level += 1
-                #for j in range(level):
-                ADDENEMY = pygame.USEREVENT + 1 * level
-                pygame.time.set_timer(ADDENEMY, 250 * level)
+                #ADDENEMY = pygame.USEREVENT + level #Velocitat de creacio dels enemics
+                #pygame.time.set_timer(ADDENEMY, 250 * level) #Velocitat de moviment dels enemics
 
     # Text de puntuacio
-    font_score = pygame.font.SysFont("Courier", 15)
-    text_score = font_score.render("Score: ", True, (255, 255, 255))#White color
-    text_level = font_score.render("Level: ", True, (255, 255, 255))#White color
+    font_score = pygame.font.SysFont("comicsans", 15)
+    text_score = font_score.render("Score: ", True, (255, 255, 255))
+    text_level = font_score.render("Level: ", True, (255, 255, 255))
     num_score = font_score.render(str(punts), True, (255, 255, 255))
     num_level = font_score.render(str(level), True, (255, 255, 255))
+       
 
     #Show text 
     print(font_score)
@@ -220,6 +250,7 @@ while running:
     screen.blit(num_score, (70, 10))
     screen.blit(text_level, (10, 30))
     screen.blit(num_level, (70, 30))
+    
 
 
     # Draw all sprites
@@ -233,6 +264,37 @@ while running:
         time.sleep(1)
         player.kill()
         running = False
+        pygame.mixer.music.stop()
+        musica_final = pygame.mixer.music.load(os.path.join(ruta_a_recurs, "game_over.ogg"))
+        pygame.mixer.music.play(loops=-1)
+        time.sleep(1)
+        pygame.mixer.music.stop()
+
+        #Pantalla final
+        final = True
+        while final:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    quit()
+                
+                screen.fill((0,0,0))
+
+                titul = text_result.render("GAME OVER :(", 1, (255, 255, 255))
+                instrucciones = text_intro.render("PRESS ENTER TO QUIT THE GAME...",1 , (255, 0, 0))
+                pts = text_intro.render("Points achived: " + str(punts), 1, (255, 255, 255))
+                lvl = text_intro.render("Level reached: " + str(level), 1, (255, 255, 255))
+                
+                screen.blit(titul, (SCREEN_WIDTH//2-SCREEN_HEIGHT//2, 75))
+                screen.blit(pts, (210, 300))
+                screen.blit(lvl, (210, 350))
+                screen.blit(instrucciones, (120, 500))
+
+                pygame.display.update()
+
+                tecla = pygame.key.get_pressed()
+
+                if tecla[pygame.K_RETURN]:
+                    final = False
 
     # Update the display
     pygame.display.flip()
@@ -244,5 +306,4 @@ while running:
 pressed_keys = pygame.key.get_pressed()
 
 #Alldone!Stopandquitthemixer.
-pygame.mixer.music.stop()
 pygame.mixer.quit()
