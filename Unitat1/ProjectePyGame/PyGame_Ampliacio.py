@@ -5,6 +5,12 @@ import os
 import time
 import sqlite3
 
+import random
+import os
+import time
+import math
+
+
 # Import the pygame module
 import pygame
 from pygame import font
@@ -223,6 +229,7 @@ pygame.mixer.music.stop()
 pygame.mixer.music.load(os.path.join(ruta_a_recurs, "Apoxode_-_Electric_1.ogg"))
 pygame.mixer.music.play(loops=-1)
 
+
 vc_temp = 0
 # Main loop
 while running:
@@ -230,6 +237,41 @@ while running:
     if vc_temp != vc:
         vc_temp = vc 
         pygame.time.set_timer(ADDENEMY, vc)
+
+
+text_intro = pygame.font.SysFont("console", 30, True)
+text_result = pygame.font.SysFont("console", 80, True)
+estar_en_intro = True
+
+musica_intro = pygame.mixer.music.load(os.path.join(ruta_a_recurs, "intro.ogg"))
+pygame.mixer.music.play(loops=-1)
+
+
+#Pantalla de benvinguda
+while(estar_en_intro):
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            quit()
+
+    screen.fill((0,0,0))
+    instrucciones = text_intro.render("Press p to play", 1, (0, 255, 0))
+    screen.blit(instrucciones, (250, 500))
+
+    tecla = pygame.key.get_pressed()
+
+    if tecla[pygame.K_p]:
+        estar_en_intro = False
+        running = True
+    
+    pygame.display.update()
+
+#Load and play background music
+pygame.mixer.music.stop()
+pygame.mixer.music.load(os.path.join(ruta_a_recurs, "Apoxode_-_Electric_1.ogg"))
+pygame.mixer.music.play(loops=-1)
+
+# Main loop
+while running:
     # Look at every event in the queue
     for event in pygame.event.get():
         # Did the user hit a key?
@@ -285,18 +327,39 @@ while running:
             if(punts%500 == 0):
                 level += 1
 
+
     # Text de puntuacio
     font_score = pygame.font.SysFont("comicsans", 20, True)
     text_score = font_score.render("Score: ", True, (175, 175, 175))
     text_level = font_score.render("Level: ", True, (175, 175, 175))
     num_score = font_score.render(str(punts), True, (175, 175, 175))
     num_level = font_score.render(str(level), True, (175, 175, 175))
+                #ADDENEMY = pygame.USEREVENT + level #Velocitat de creacio dels enemics
+                #pygame.time.set_timer(ADDENEMY, 250 * level) #Velocitat de moviment dels enemics
+
+    # Text de puntuacio
+    font_score = pygame.font.SysFont("comicsans", 15)
+    text_score = font_score.render("Score: ", True, (255, 255, 255))
+    text_level = font_score.render("Level: ", True, (255, 255, 255))
+    num_score = font_score.render(str(punts), True, (255, 255, 255))
+    num_level = font_score.render(str(level), True, (255, 255, 255))
+       
+
+    #Show text 
+    print(font_score)
+    print(text_score)
+    print(num_score)
+    print(text_level)
+    print(num_level)
 
     #Text position
     screen.blit(text_score, (10, 10))
     screen.blit(num_score, (60, 10))
     screen.blit(text_level, (10, 30))
+
     screen.blit(num_level, (55, 30))
+
+    screen.blit(num_level, (70, 30))
 
     # Draw all sprites
     for entity in all_sprites:
@@ -310,9 +373,11 @@ while running:
         player.kill()
 
         running = False
+
         if punts > read():
             update(punts)
         print(read())
+
         pygame.mixer.music.stop()
         musica_final = pygame.mixer.music.load(os.path.join(ruta_a_recurs, "game_over.ogg"))
         pygame.mixer.music.play(loops=-1)
@@ -336,6 +401,9 @@ while running:
                 screen.blit(titul, (SCREEN_WIDTH//2-SCREEN_HEIGHT//2, 75))
                 screen.blit(pts, (220, 300))
                 screen.blit(lvl, (220, 350))
+                screen.blit(pts, (210, 300))
+                screen.blit(lvl, (210, 350))
+
                 screen.blit(instrucciones, (120, 500))
 
                 pygame.display.update()
