@@ -1,4 +1,3 @@
-
 from posixpath import join
 import random
 import os
@@ -14,7 +13,7 @@ import math
 # Import the pygame module
 import pygame
 from pygame import font
-from pygame.constants import JOYHATMOTION, RLEACCEL
+from pygame.constants import JOYHATMOTION, K_SPACE, RLEACCEL
 from pygame.display import update
 
 ruta_base = os.path.dirname(__file__)
@@ -38,6 +37,7 @@ SCREEN_HEIGHT = 600
 
 BLACK = (0, 0, 0)
 BLUE = (135, 206, 250)
+RED = (255, 0, 0)
 
 #Initialize value punts = 0
 punts = 0 
@@ -99,6 +99,8 @@ class Player(pygame.sprite.Sprite):
             self.rect.move_ip(-5, 0)
         if pressed_keys[K_RIGHT]:
             self.rect.move_ip(5, 0)
+        if pressed_keys[K_SPACE]:
+            player.shot()
 
         # Keep player on the screen
         if self.rect.left < 0:
@@ -109,6 +111,10 @@ class Player(pygame.sprite.Sprite):
             self.rect.top = 0
         if self.rect.bottom >= SCREEN_HEIGHT:
             self.rect.bottom = SCREEN_HEIGHT
+    
+    def shot(self):
+        bullet = Shot(self.rect.centerx, self.rect.right)
+        shots.add(bullet)
     
 # Define the enemy object by extending pygame.sprite.Sprite
 # The surface you draw on the screen is now an attribute of 'enemy'
@@ -152,6 +158,19 @@ class Cloud(pygame.sprite.Sprite):
         if self.rect.right < 0:
             self.kill()
 
+class Shot(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.surf = pygame.image.load(os.path.join(ruta_a_recurs, "bala.png")).convert()
+        self.rect = self.surf.get_rect()
+        self.rect.bottom = y
+        self.rect.centerx = x
+    
+    def update(self):
+        self.rect.x += 20
+        if self.rect.bottom < 0:
+            self.kill()
+
 #Setupforsounds. Defaultsaregood.
 pygame.mixer.init()
 
@@ -190,6 +209,7 @@ player = Player()
 # - all_sprites is used for rendering
 enemies = pygame.sprite.Group()
 clouds = pygame.sprite.Group()
+shots = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 all_sprites.add(player)
 
@@ -238,40 +258,6 @@ while running:
         vc_temp = vc 
         pygame.time.set_timer(ADDENEMY, vc)
 
-
-text_intro = pygame.font.SysFont("console", 30, True)
-text_result = pygame.font.SysFont("console", 80, True)
-estar_en_intro = True
-
-musica_intro = pygame.mixer.music.load(os.path.join(ruta_a_recurs, "intro.ogg"))
-pygame.mixer.music.play(loops=-1)
-
-
-#Pantalla de benvinguda
-while(estar_en_intro):
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            quit()
-
-    screen.fill((0,0,0))
-    instrucciones = text_intro.render("Press p to play", 1, (0, 255, 0))
-    screen.blit(instrucciones, (250, 500))
-
-    tecla = pygame.key.get_pressed()
-
-    if tecla[pygame.K_p]:
-        estar_en_intro = False
-        running = True
-    
-    pygame.display.update()
-
-#Load and play background music
-pygame.mixer.music.stop()
-pygame.mixer.music.load(os.path.join(ruta_a_recurs, "Apoxode_-_Electric_1.ogg"))
-pygame.mixer.music.play(loops=-1)
-
-# Main loop
-while running:
     # Look at every event in the queue
     for event in pygame.event.get():
         # Did the user hit a key?
@@ -317,6 +303,9 @@ while running:
     # Update cloud position
     clouds.update()
 
+    # Update cloud position
+    shots.update()
+
     # Fill the screen with blue
     screen.fill((color))
 
@@ -330,36 +319,16 @@ while running:
 
     # Text de puntuacio
     font_score = pygame.font.SysFont("comicsans", 20, True)
-    text_score = font_score.render("Score: ", True, (175, 175, 175))
-    text_level = font_score.render("Level: ", True, (175, 175, 175))
-    num_score = font_score.render(str(punts), True, (175, 175, 175))
-    num_level = font_score.render(str(level), True, (175, 175, 175))
-                #ADDENEMY = pygame.USEREVENT + level #Velocitat de creacio dels enemics
-                #pygame.time.set_timer(ADDENEMY, 250 * level) #Velocitat de moviment dels enemics
-
-    # Text de puntuacio
-    font_score = pygame.font.SysFont("comicsans", 15)
-    text_score = font_score.render("Score: ", True, (255, 255, 255))
-    text_level = font_score.render("Level: ", True, (255, 255, 255))
-    num_score = font_score.render(str(punts), True, (255, 255, 255))
-    num_level = font_score.render(str(level), True, (255, 255, 255))
-       
-
-    #Show text 
-    print(font_score)
-    print(text_score)
-    print(num_score)
-    print(text_level)
-    print(num_level)
+    text_score = font_score.render("Score: ", True, (RED))
+    text_level = font_score.render("Level: ", True, (RED))
+    num_score = font_score.render(str(punts), True, (RED))
+    num_level = font_score.render(str(level), True, (RED))
 
     #Text position
     screen.blit(text_score, (10, 10))
     screen.blit(num_score, (60, 10))
     screen.blit(text_level, (10, 30))
-
     screen.blit(num_level, (55, 30))
-
-    screen.blit(num_level, (70, 30))
 
     # Draw all sprites
     for entity in all_sprites:
@@ -401,9 +370,6 @@ while running:
                 screen.blit(titul, (SCREEN_WIDTH//2-SCREEN_HEIGHT//2, 75))
                 screen.blit(pts, (220, 300))
                 screen.blit(lvl, (220, 350))
-                screen.blit(pts, (210, 300))
-                screen.blit(lvl, (210, 350))
-
                 screen.blit(instrucciones, (120, 500))
 
                 pygame.display.update()
