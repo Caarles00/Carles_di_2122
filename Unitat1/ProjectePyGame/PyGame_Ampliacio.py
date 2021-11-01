@@ -38,6 +38,8 @@ SCREEN_HEIGHT = 600
 BLACK = (0, 0, 0)
 BLUE = (135, 206, 250)
 RED = (255, 0, 0)
+WHITE = (255, 255, 255)
+GREEN = (0, 255, 0)
 
 #Initialize value punts = 0
 punts = 0 
@@ -162,6 +164,7 @@ class Shot(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
         self.surf = pygame.image.load(os.path.join(ruta_a_recurs, "bala.png")).convert()
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.rect = self.surf.get_rect()
         self.rect.bottom = y
         self.rect.centerx = x
@@ -219,6 +222,7 @@ clock = pygame.time.Clock()
 # Variable to keep the main loop running
 running = True
 
+font_score = pygame.font.SysFont("comicsans", 20, True)
 text_intro = pygame.font.SysFont("console", 30, True)
 text_result = pygame.font.SysFont("console", 80, True)
 estar_en_intro = True
@@ -234,8 +238,12 @@ while(estar_en_intro):
             quit()
 
     screen.fill((0,0,0))
-    instrucciones = text_intro.render("Press p to play", 1, (0, 255, 0))
+    record = text_intro.render("Current record:", 1, (WHITE))
+    instrucciones = text_intro.render("Press p to play", 1, (GREEN))
+    num_record = text_intro.render(str(read()), 1, (WHITE))
     screen.blit(instrucciones, (250, 500))
+    screen.blit(record, (230, 450))
+    screen.blit(num_record, (500, 450))
 
     tecla = pygame.key.get_pressed()
 
@@ -316,9 +324,7 @@ while running:
             if(punts%500 == 0):
                 level += 1
 
-
     # Text de puntuacio
-    font_score = pygame.font.SysFont("comicsans", 20, True)
     text_score = font_score.render("Score: ", True, (RED))
     text_level = font_score.render("Level: ", True, (RED))
     num_score = font_score.render(str(punts), True, (RED))
@@ -342,10 +348,12 @@ while running:
         player.kill()
 
         running = False
-
-        if punts > read():
-            update(punts)
-        print(read())
+        
+        def congrats():
+            if punts > read():
+                update(punts)
+                text_congrats = text_intro.render("Congrats, new record!", 1, (WHITE))
+                screen.blit(text_congrats, (220, 250))
 
         pygame.mixer.music.stop()
         musica_final = pygame.mixer.music.load(os.path.join(ruta_a_recurs, "game_over.ogg"))
@@ -361,11 +369,11 @@ while running:
                     quit()
                 
                 screen.fill((0,0,0))
-
-                titul = text_result.render("GAME OVER :(", 1, (255, 255, 255))
-                instrucciones = text_intro.render("PRESS ENTER TO QUIT THE GAME...",1 , (255, 0, 0))
-                pts = text_intro.render("Points achived: " + str(punts), 1, (255, 255, 255))
-                lvl = text_intro.render("Level reached: " + str(level), 1, (255, 255, 255))
+                congrats()
+                titul = text_result.render("GAME OVER :(", 1, (WHITE))
+                instrucciones = text_intro.render("PRESS ENTER TO QUIT THE GAME...",1 , (RED))
+                pts = text_intro.render("Points achived: " + str(punts), 1, (WHITE))
+                lvl = text_intro.render("Level reached: " + str(level), 1, (WHITE))
                 
                 screen.blit(titul, (SCREEN_WIDTH//2-SCREEN_HEIGHT//2, 75))
                 screen.blit(pts, (220, 300))
@@ -384,6 +392,7 @@ while running:
 
     # Ensure program maintains a rate of 30 frames per second
     clock.tick(30)
+
 
 # Get the set of keys pressed and check for user input
 pressed_keys = pygame.key.get_pressed()
