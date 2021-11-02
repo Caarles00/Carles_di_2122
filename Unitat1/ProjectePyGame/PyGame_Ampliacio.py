@@ -7,12 +7,11 @@ import sqlite3
 import random
 import os
 import time
-import math
-
 
 # Import the pygame module
 import pygame
 from pygame import font
+from pygame import display
 from pygame.constants import JOYHATMOTION, K_SPACE, RLEACCEL
 from pygame.display import update
 
@@ -90,6 +89,7 @@ class Player(pygame.sprite.Sprite):
         self.surf = pygame.image.load(os.path.join(ruta_a_recurs, "jet.png")).convert()
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.rect = self.surf.get_rect()
+        self.vides = 3
 
     # Move the sprite based on user keypresses
     def update(self, pressed_keys):
@@ -115,7 +115,7 @@ class Player(pygame.sprite.Sprite):
             self.rect.bottom = SCREEN_HEIGHT
     
     def shot(self):
-        bullet = Shot(self.rect.centerx, self.rect.right)
+        bullet = Shot(self.rect.centerx, self.rect.centery)
         shots.add(bullet)
     
 # Define the enemy object by extending pygame.sprite.Sprite
@@ -145,7 +145,7 @@ class Cloud(pygame.sprite.Sprite):
     
     def __init__(self):
         super(Cloud, self).__init__()
-        self.surf = pygame.image.load(os.path.join(ruta_a_recurs, "cloud.png")).convert()
+        self.surf = pygame.image.load(os.path.join(ruta_a_recurs, "cloud1.png")).convert()
         self.surf.set_colorkey((0, 0, 0), RLEACCEL)            
         self.rect = self.surf.get_rect(
             center=(
@@ -156,16 +156,16 @@ class Cloud(pygame.sprite.Sprite):
     
 
     def update(self):
-        self.rect.move_ip(-5 ,0)
+        self.rect.move_ip(-5 ,0) 
         if self.rect.right < 0:
             self.kill()
 
 class Shot(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
-        self.surf = pygame.image.load(os.path.join(ruta_a_recurs, "bala.png")).convert()
-        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
-        self.rect = self.surf.get_rect()
+        self.image = pygame.transform.scale(pygame.image.load("Utils/bala.png").convert(), (20, 20)) 
+        self.image.set_colorkey((0, 0, 0), RLEACCEL)
+        self.rect = self.image.get_rect()
         self.rect.bottom = y
         self.rect.centerx = x
     
@@ -230,6 +230,8 @@ estar_en_intro = True
 musica_intro = pygame.mixer.music.load(os.path.join(ruta_a_recurs, "intro.ogg"))
 pygame.mixer.music.play(loops=-1)
 
+fondo_intro = pygame.image.load(os.path.join(ruta_a_recurs, "jet_intro1.jpg")).convert()
+fondo_intro = pygame.transform.scale(fondo_intro,(SCREEN_WIDTH, SCREEN_HEIGHT))
 
 #Pantalla de benvinguda
 while(estar_en_intro):
@@ -237,13 +239,13 @@ while(estar_en_intro):
         if event.type == pygame.QUIT:
             quit()
 
-    screen.fill((0,0,0))
-    record = text_intro.render("Current record:", 1, (WHITE))
+    screen.blit(fondo_intro, (0, 0))
+    title = text_result.render("Jet Game", 1, (WHITE))
+    record = text_intro.render("Current record: " + str(read()), 1, (WHITE))
     instrucciones = text_intro.render("Press p to play", 1, (GREEN))
-    num_record = text_intro.render(str(read()), 1, (WHITE))
-    screen.blit(instrucciones, (250, 500))
-    screen.blit(record, (230, 450))
-    screen.blit(num_record, (500, 450))
+    screen.blit(title, (200, 100))
+    screen.blit(instrucciones, (250, 550))
+    screen.blit(record, (230, 500))
 
     tecla = pygame.key.get_pressed()
 
@@ -256,7 +258,6 @@ while(estar_en_intro):
 pygame.mixer.music.stop()
 pygame.mixer.music.load(os.path.join(ruta_a_recurs, "Apoxode_-_Electric_1.ogg"))
 pygame.mixer.music.play(loops=-1)
-
 
 vc_temp = 0
 # Main loop
@@ -314,6 +315,8 @@ while running:
     # Update cloud position
     shots.update()
 
+    colision = pygame.sprite.groupcollide(enemies, shots, True, False)   
+
     # Fill the screen with blue
     screen.fill((color))
 
@@ -330,6 +333,8 @@ while running:
     num_score = font_score.render(str(punts), True, (RED))
     num_level = font_score.render(str(level), True, (RED))
 
+    shots.draw(screen)
+
     #Text position
     screen.blit(text_score, (10, 10))
     screen.blit(num_score, (60, 10))
@@ -341,51 +346,52 @@ while running:
         screen.blit(entity.surf, entity.rect)
     
     # Check if any enemies have collided with the player
-    if pygame.sprite.spritecollideany(player, enemies):
+    if pygame.sprite.spritecollide(player, enemies, True):
         # If so, then remove the player and stop the loop
         collision_sound.play()
-        time.sleep(1)
-        player.kill()
+        player.vides -= 1 
 
-        running = False
-        
-        def congrats():
-            if punts > read():
-                update(punts)
-                text_congrats = text_intro.render("Congrats, new record!", 1, (WHITE))
-                screen.blit(text_congrats, (220, 250))
+        if player.vides <= 0:
+            running = False
+            player.kill()                
+            print(punts)
+            
+            pygame.mixer.music.stop()
+            musica_final = pygame.mixer.music.load(os.path.join(ruta_a_recurs, "game_over.ogg"))
+            pygame.mixer.music.play(loops=-1)
+            time.sleep(1)
+            pygame.mixer.music.stop()
 
-        pygame.mixer.music.stop()
-        musica_final = pygame.mixer.music.load(os.path.join(ruta_a_recurs, "game_over.ogg"))
-        pygame.mixer.music.play(loops=-1)
-        time.sleep(1)
-        pygame.mixer.music.stop()
+            #Pantalla final
+            final = True
+            while final:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        quit()
+                    
+                    screen.fill((0,0,0))
+                    titul = text_result.render("GAME OVER :(", 1, (WHITE))
+                    instrucciones = text_intro.render("PRESS ENTER TO QUIT THE GAME...",1 , (RED))
+                    pts = text_intro.render("Points achived: " + str(punts), 1, (WHITE))
+                    lvl = text_intro.render("Level reached: " + str(level), 1, (WHITE))
+                    
+                    if punts > read():
+                        print("pato")
+                        update(punts)
+                        text_congrats = text_intro.render("Congrats, new record!", 1, (WHITE))
+                        screen.blit(text_congrats, (220, 250))
 
-        #Pantalla final
-        final = True
-        while final:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    quit()
-                
-                screen.fill((0,0,0))
-                congrats()
-                titul = text_result.render("GAME OVER :(", 1, (WHITE))
-                instrucciones = text_intro.render("PRESS ENTER TO QUIT THE GAME...",1 , (RED))
-                pts = text_intro.render("Points achived: " + str(punts), 1, (WHITE))
-                lvl = text_intro.render("Level reached: " + str(level), 1, (WHITE))
-                
-                screen.blit(titul, (SCREEN_WIDTH//2-SCREEN_HEIGHT//2, 75))
-                screen.blit(pts, (220, 300))
-                screen.blit(lvl, (220, 350))
-                screen.blit(instrucciones, (120, 500))
+                    screen.blit(titul, (SCREEN_WIDTH//2-SCREEN_HEIGHT//2, 75))
+                    screen.blit(pts, (220, 300))
+                    screen.blit(lvl, (220, 350))
+                    screen.blit(instrucciones, (120, 500))
 
-                pygame.display.update()
+                    pygame.display.update()
 
-                tecla = pygame.key.get_pressed()
+                    tecla = pygame.key.get_pressed()
 
-                if tecla[pygame.K_RETURN]:
-                    final = False
+                    if tecla[pygame.K_RETURN]:
+                        final = False
 
     # Update the display
     pygame.display.flip()
