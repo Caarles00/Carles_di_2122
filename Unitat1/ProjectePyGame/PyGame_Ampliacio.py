@@ -79,6 +79,16 @@ def read():
     return var_cursor[0]
 
 
+#Setupforsounds. Defaultsaregood.
+pygame.mixer.init()
+
+#Load all sound files
+#Soundsources:Jon Fincher
+move_up_sound=pygame.mixer.Sound(os.path.join(ruta_a_recurs, "Rising_putter.ogg"))
+move_down_sound=pygame.mixer.Sound(os.path.join(ruta_a_recurs, "Falling_putter.ogg"))
+collision_sound=pygame.mixer.Sound(os.path.join(ruta_a_recurs, "Collision.ogg"))
+sonido_disparo = pygame.mixer.music.load(os.path.join(ruta_a_recurs, "disparo.mp3"))
+
 
 # Define a player object by extending pygame.sprite.Sprite
 # The surface drawn on the screen is now an attribute of 'player'
@@ -89,7 +99,13 @@ class Player(pygame.sprite.Sprite):
         self.surf = pygame.image.load(os.path.join(ruta_a_recurs, "jet.png")).convert()
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.rect = self.surf.get_rect()
+
+        #Vides del personatge
         self.vides = 3
+
+        #Cadencia de dispars
+        self.cadencia = 750
+        self.ultim_dispar = pygame.time.get_ticks()
 
     # Move the sprite based on user keypresses
     def update(self, pressed_keys):
@@ -102,7 +118,12 @@ class Player(pygame.sprite.Sprite):
         if pressed_keys[K_RIGHT]:
             self.rect.move_ip(5, 0)
         if pressed_keys[K_SPACE]:
-            player.shot()
+
+            ahora = pygame.time.get_ticks()
+            if (ahora - self.ultim_dispar > self.cadencia):
+                player.shot()
+                #sonido_disparo.play()
+                self.ultim_dispar = ahora
 
         # Keep player on the screen
         if self.rect.left < 0:
@@ -145,7 +166,7 @@ class Cloud(pygame.sprite.Sprite):
     
     def __init__(self):
         super(Cloud, self).__init__()
-        self.surf = pygame.image.load(os.path.join(ruta_a_recurs, "cloud1.png")).convert()
+        self.surf = pygame.image.load(os.path.join(ruta_a_recurs, "cloud.png")).convert()
         self.surf.set_colorkey((0, 0, 0), RLEACCEL)            
         self.rect = self.surf.get_rect(
             center=(
@@ -174,18 +195,8 @@ class Shot(pygame.sprite.Sprite):
         if self.rect.bottom < 0:
             self.kill()
 
-#Setupforsounds. Defaultsaregood.
-pygame.mixer.init()
-
 # Initialize pygame
 pygame.init()
-
-
-#Load all sound files
-#Soundsources:Jon Fincher
-move_up_sound=pygame.mixer.Sound(os.path.join(ruta_a_recurs, "Rising_putter.ogg"))
-move_down_sound=pygame.mixer.Sound(os.path.join(ruta_a_recurs, "Falling_putter.ogg"))
-collision_sound=pygame.mixer.Sound(os.path.join(ruta_a_recurs, "Collision.ogg"))
 
 # Create the screen object
 # The size is determined by the constant SCREEN_WIDTH and SCREEN_HEIGHT
@@ -201,7 +212,7 @@ ADDCLOUD = pygame.USEREVENT + 2
 pygame.time.set_timer(ADDCLOUD, 1000)
 
 ADDNIGHT = pygame.USEREVENT + 3
-pygame.time.set_timer(ADDNIGHT, 20000)
+pygame.time.set_timer(ADDNIGHT, 15000)
 
 
 #Instantiate player. Right now, this is just a rectangle.
@@ -328,18 +339,16 @@ while running:
                 level += 1
 
     # Text de puntuacio
-    text_score = font_score.render("Score: ", True, (RED))
-    text_level = font_score.render("Level: ", True, (RED))
-    num_score = font_score.render(str(punts), True, (RED))
-    num_level = font_score.render(str(level), True, (RED))
-
-    shots.draw(screen)
+    text_score = font_score.render("Score: " + str(punts), True, (RED))
+    text_level = font_score.render("Level: " + str(level), True, (RED))
+    text_vidas = font_score.render("Lives: " + str(player.vides), True , (RED))
 
     #Text position
     screen.blit(text_score, (10, 10))
-    screen.blit(num_score, (60, 10))
     screen.blit(text_level, (10, 30))
-    screen.blit(num_level, (55, 30))
+    screen.blit(text_vidas, (10, 50))
+
+    shots.draw(screen)
 
     # Draw all sprites
     for entity in all_sprites:
