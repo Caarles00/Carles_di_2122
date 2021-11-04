@@ -40,7 +40,7 @@ RED = (255, 0, 0)
 WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
 
-#Initialize value punts = 0
+#Initialize values
 punts = 0 
 level = 1
 temps = True
@@ -57,6 +57,7 @@ def create_table(con):
     except sqlite3.OperationalError:
         print("Max_Score already exists")
 
+#Es conecta a la base de dades
 def conexion():
     try:
         conexion=sqlite3.connect("bd1.bd")
@@ -67,12 +68,13 @@ def conexion():
 
 con = conexion()
 
-
+#Actualitza els punts en cas de que siga record
 def update(points):
     cursor = con.cursor()
     cursor.execute("UPDATE Max_Score SET score={}".format(points))
     con.commit()
 
+#Toran el resultat de score, que es la puntuacio màxima
 def read():
     cursor = con.cursor()
     var_cursor = cursor.execute("SELECT score FROM Max_Score").fetchone()
@@ -104,7 +106,7 @@ class Player(pygame.sprite.Sprite):
         self.vides = 3
 
         #Cadencia de dispars
-        self.cadencia = 750
+        self.cadencia = 700
         self.ultim_dispar = pygame.time.get_ticks()
 
     # Move the sprite based on user keypresses
@@ -119,6 +121,7 @@ class Player(pygame.sprite.Sprite):
             self.rect.move_ip(5, 0)
         if pressed_keys[K_SPACE]:
 
+            #Control de cadencia dels dispars
             ahora = pygame.time.get_ticks()
             if (ahora - self.ultim_dispar > self.cadencia):
                 player.shot()
@@ -135,6 +138,7 @@ class Player(pygame.sprite.Sprite):
         if self.rect.bottom >= SCREEN_HEIGHT:
             self.rect.bottom = SCREEN_HEIGHT
     
+    #Definim la posicio d'on ix la bala
     def shot(self):
         bullet = Shot(self.rect.centerx, self.rect.centery)
         shots.add(bullet)
@@ -181,6 +185,7 @@ class Cloud(pygame.sprite.Sprite):
         if self.rect.right < 0:
             self.kill()
 
+
 class Shot(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
@@ -201,9 +206,6 @@ pygame.init()
 # Create the screen object
 # The size is determined by the constant SCREEN_WIDTH and SCREEN_HEIGHT
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-
-#global vel_creacio
-#vel_creacio = 100
 
 # Create a custom event for adding a new enemy
 ADDENEMY = pygame.USEREVENT + 1
@@ -233,7 +235,7 @@ clock = pygame.time.Clock()
 # Variable to keep the main loop running
 running = True
 
-font_score = pygame.font.SysFont("comicsans", 20, True)
+font_score = pygame.font.SysFont("comicsans", 30, True)
 text_intro = pygame.font.SysFont("console", 30, True)
 text_result = pygame.font.SysFont("console", 80, True)
 estar_en_intro = True
@@ -273,6 +275,7 @@ pygame.mixer.music.play(loops=-1)
 vc_temp = 0
 # Main loop
 while running:
+    #Control de la velocitat del enemics per a cada nivell
     vc = int(50 + 200//level)
     if vc_temp != vc:
         vc_temp = vc 
@@ -326,27 +329,44 @@ while running:
     # Update cloud position
     shots.update()
 
-    colision = pygame.sprite.groupcollide(enemies, shots, True, False)   
+    colision = pygame.sprite.groupcollide(enemies, shots, True, False)
 
     # Fill the screen with blue
     screen.fill((color))
+
+    #Cors de les 3 vides
+    cora = pygame.image.load(os.path.join(ruta_a_recurs, "corazon.png"))
+  
+    #Per a cada vida de menos borrem un cor
+    if player.vides == 3:
+        cora1 = screen.blit(cora, (440, 10))
+        cora2 = screen.blit(cora, (410, 10))
+        cora3 = screen.blit(cora, (380, 10))
+
+    if player.vides == 2:        
+        cora2 = screen.blit(cora, (410, 10))
+        cora3 = screen.blit(cora, (380, 10))
+    
+    if player.vides == 1:
+        cora3 = screen.blit(cora, (380, 10))
 
     #Add 10 points to score when the enemies passes the left edge of the screen
     for i in enemies:
         if i.rect.right < 10:
             punts += 10
+            #Per a cada 500 punts pujem de nivell
             if(punts%500 == 0):
                 level += 1
 
     # Text de puntuacio
     text_score = font_score.render("Score: " + str(punts), True, (RED))
     text_level = font_score.render("Level: " + str(level), True, (RED))
-    text_vidas = font_score.render("Lives: " + str(player.vides), True , (RED))
+    text_vidas = font_score.render("Lives: ", True , (RED))
 
     #Text position
     screen.blit(text_score, (10, 10))
     screen.blit(text_level, (10, 30))
-    screen.blit(text_vidas, (10, 50))
+    screen.blit(text_vidas, (300, 15))
 
     shots.draw(screen)
 
@@ -358,12 +378,11 @@ while running:
     if pygame.sprite.spritecollide(player, enemies, True):
         # If so, then remove the player and stop the loop
         collision_sound.play()
-        player.vides -= 1 
+        player.vides -= 1
 
         if player.vides <= 0:
             running = False
             player.kill()                
-            print(punts)
             
             pygame.mixer.music.stop()
             musica_final = pygame.mixer.music.load(os.path.join(ruta_a_recurs, "game_over.ogg"))
@@ -379,16 +398,17 @@ while running:
                         quit()
                     
                     screen.fill((0,0,0))
+
+                    #Si els punts de la partida son major als que tenim guradats en la base de dades, que mostre el menstge de enhorabona i actualitze els punts
+                    if punts > read():
+                        text_congrats = text_intro.render("Congrats, new record!", 1, (WHITE))
+                        screen.blit(text_congrats, (220, 250))
+                        update(punts)
+
                     titul = text_result.render("GAME OVER :(", 1, (WHITE))
                     instrucciones = text_intro.render("PRESS ENTER TO QUIT THE GAME...",1 , (RED))
                     pts = text_intro.render("Points achived: " + str(punts), 1, (WHITE))
                     lvl = text_intro.render("Level reached: " + str(level), 1, (WHITE))
-                    
-                    if punts > read():
-                        print("pato")
-                        update(punts)
-                        text_congrats = text_intro.render("Congrats, new record!", 1, (WHITE))
-                        screen.blit(text_congrats, (220, 250))
 
                     screen.blit(titul, (SCREEN_WIDTH//2-SCREEN_HEIGHT//2, 75))
                     screen.blit(pts, (220, 300))
