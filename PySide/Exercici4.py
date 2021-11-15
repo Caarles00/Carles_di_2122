@@ -1,13 +1,14 @@
 from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton
 from PySide6.QtCore import QSize, Qt
+from config import AMPLE, LLARG, RESIZE_W, RESIZE_H
 
 class MainWindow(QMainWindow):
     
     def __init__(self):
         QMainWindow.__init__(self)
 
-        ample = 500
-        llarg = 500
+        ample = AMPLE
+        llarg = LLARG
 
         self.setFixedSize(QSize(ample, llarg))
         self.setWindowTitle("Default")
@@ -21,22 +22,21 @@ class MainWindow(QMainWindow):
         self.pybutton1.clicked.connect(self.normal)
         self.pybutton2.clicked.connect(self.min)
 
-        self.pybutton.resize(100, 50)
-        self.pybutton.move(50, ample//2)
+        self.pybutton.resize(RESIZE_W, RESIZE_H)
+        self.pybutton.move(50, AMPLE//2)
 
-        self.pybutton1.resize(100, 50)
-        self.pybutton1.move(200, ample//2)
+        self.pybutton1.resize(RESIZE_W, RESIZE_H)
+        self.pybutton1.move(200, AMPLE//2)
 
-        self.pybutton2.resize(100, 50)
-        self.pybutton2.move(350, ample//2)
+        self.pybutton2.resize(RESIZE_W, RESIZE_H)
+        self.pybutton2.move(350, AMPLE//2)
 
     def max(self):
-        ample = 800
-        llarg = 800
+        ample = AMPLE + 300
+        llarg = LLARG + 300
 
         self.setFixedSize(QSize(ample, llarg))
         self.setWindowTitle("Maximitzat")
-        #self.setWindowFlag(self.setDisabled);
 
         self.pybutton.move(200, ample//2)
         self.pybutton1.move(350, ample//2)
@@ -47,8 +47,8 @@ class MainWindow(QMainWindow):
         self.pybutton2.setDisabled(False)
 
     def min(self):
-        ample = 300
-        llarg = 300
+        ample = AMPLE - 200
+        llarg = LLARG - 200
 
         self.setFixedSize(QSize(ample, llarg))
         self.setWindowTitle("Minimitzat")
@@ -62,15 +62,13 @@ class MainWindow(QMainWindow):
         self.pybutton2.setDisabled(True)
 
     def normal(self):
-        ample = 500
-        llarg = 500
 
-        self.setFixedSize(QSize(ample, llarg))
+        self.setFixedSize(QSize(AMPLE, LLARG))
         self.setWindowTitle("Normal")
 
-        self.pybutton.move(50, ample//2)
-        self.pybutton1.move(200, ample//2)
-        self.pybutton2.move(350, ample//2)
+        self.pybutton.move(50, AMPLE//2)
+        self.pybutton1.move(200, AMPLE//2)
+        self.pybutton2.move(350, AMPLE//2)
 
         self.pybutton.setDisabled(False)
         self.pybutton1.setDisabled(True)
