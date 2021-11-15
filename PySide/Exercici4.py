@@ -7,10 +7,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
 
-        ample = AMPLE
-        llarg = LLARG
-
-        self.setFixedSize(QSize(ample, llarg))
+        self.setFixedSize(QSize(AMPLE, LLARG))
         self.setWindowTitle("Default")
 
         self.pybutton = QPushButton('Maximitza', self)
