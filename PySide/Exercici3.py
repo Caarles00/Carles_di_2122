@@ -26,7 +26,6 @@ class MainWindow(QMainWindow):
         self.button = QPushButton(text)
         self.setCentralWidget(self.button)
         self.button.clicked.connect(QApplication.instance().quit)
-        self.statusBar().showMessage('Alfre')
 
 
 def main():
@@ -41,7 +40,7 @@ def main():
     args = parser.parse_args()
 
     # PySide6
-    app = QApplication(args)
+    app = QApplication()
     window = MainWindow(args)
     window.show()
     sys.exit(app.exec())

@@ -42,6 +42,10 @@ class MainWindow(QMainWindow):
         self.pybutton1.move(350, ample//2)
         self.pybutton2.move(500, ample//2)
 
+        self.pybutton.setDisabled(True)
+        self.pybutton1.setDisabled(False)
+        self.pybutton2.setDisabled(False)
+
     def min(self):
         ample = 300
         llarg = 300
@@ -53,6 +57,10 @@ class MainWindow(QMainWindow):
         self.pybutton1.move(100, ample//2)
         self.pybutton2.move(200, ample//2)
 
+        self.pybutton.setDisabled(False)
+        self.pybutton1.setDisabled(False)
+        self.pybutton2.setDisabled(True)
+
     def normal(self):
         ample = 500
         llarg = 500
@@ -63,6 +71,10 @@ class MainWindow(QMainWindow):
         self.pybutton.move(50, ample//2)
         self.pybutton1.move(200, ample//2)
         self.pybutton2.move(350, ample//2)
+
+        self.pybutton.setDisabled(False)
+        self.pybutton1.setDisabled(True)
+        self.pybutton2.setDisabled(False)
 
 if __name__ == "__main__":
     app = QApplication([])
