@@ -1,7 +1,8 @@
-from ossaudiodev import SOUND_MIXER_TREBLE
+
 import sys
 import os
-from time import sleep
+import mysql.connector
+
 
 
 from PySide6.QtGui import QAction, QIcon
@@ -21,35 +22,6 @@ from PySide6.QtWidgets import (
 )
 
 ruta_base = os.path.dirname(__file__)
-
-# Connexió al la base de dades
-# class ConnexioBD():
-#     def __init__(self):
-#         super().__init__()
-
-#         def create_table(con):
-#             cursor = con.cursor()
-#             try:
-#                 cursor.execute("CREATE TABLE IF NOT EXISTS Entrenadors(nom CHAR, passwd CHAR)")
-#                 print("Taula creada")
-#             except sqlite3.OperationalError:
-#                 print("La taula de Entrenadors ja està creada")
-
-#         # Ens connectem a la basde de dades
-#         def conexion():
-#             try:
-#                 conexion=sqlite3.connect("Futbol.bd")
-#                 create_table(conexion)
-#                 return conexion
-#             except sqlite3.OperationalError:
-#                 print("Error")
-
-#         con = conexion()
-
-#         def read():
-#             cursor = con.cursor()
-#             var_cursor = cursor.execute("SELECT score FROM Entrenadors").fetchone()
-#             return var_cursor[0] + var_cursor[1]
 
 # Dialeg per a exir
 class DialogExit(QDialog):
@@ -121,14 +93,12 @@ class User(QMainWindow):
         super().__init__()
 
         self.estadistica = Estadistica()
-        #self.aboutFinestra = About()
+        self.aboutFinestra = About()
 
         centralWidget = QWidget(self)
         self.setCentralWidget(centralWidget)
 
-        self.setWindowTitle("USER")
-        self.label = QLabel("Has entrat com a usuari", self)
-        self.setCentralWidget(self.label)
+        self.setWindowTitle("Usuario")
 
         icon_path = os.path.join(ruta_base, "PNGs/door-open-out.png")
         LogOut = QAction(QIcon(icon_path), "&Log out", self)
@@ -156,38 +126,37 @@ class User(QMainWindow):
         layoutUser = QVBoxLayout()
         layoutTopSide = QHBoxLayout()
         layoutEquips = QVBoxLayout()
-        layoutJugadors = QVBoxLayout()
+        self.layoutJugadors = QVBoxLayout()
         layoutBoto = QVBoxLayout()
 
         # Layout Equips
         labelEquips = QLabel()
         labelEquips.setText("Mis Equipos")
 
-        boxEquips = QComboBox()
-        boxEquips.addItem("Prebenjamin A")
-        boxEquips.addItem("Alevin B")
-        
+        self.boxEquips = QComboBox()
+        self.boxEquips.addItem("")
+        self.boxEquips.addItem("Prebenjamin A")
+        self.boxEquips.addItem("Alevin B")
+
         layoutEquips.addWidget(labelEquips)
-        layoutEquips.addWidget(boxEquips)
+        layoutEquips.addWidget(self.boxEquips)
         
 
         # Layout Jugadors
-        labelJugadors = QLabel()
-        labelJugadors.setText("Jugadores")
+        self.labelJugadors = QLabel()
+        self.labelJugadors.setText("Jugadores")
 
-        boxJuagdors = QComboBox()
-        llistaJugadorsPrebenjamin = ["Antonio Garica", "Jose Martinez", "Francisco Lopez", 
+        self.boxJuagdors = QComboBox()
+        self.llistaJugadorsPrebenjamin = ["Antonio Garcia", "Jose Martinez", "Francisco Lopez", 
         "Juan Sanchez", "Pedro Gomez", "Jesus Fernandez"
         ]
-        llistaJugadorsAlevin = ["Andres Cano", "Ramon Garrido", "Enrique Gil", "Alvaro Ortiz", 
+        self.llistaJugadorsAlevin = ["Andres Cano", "Ramon Garrido", "Enrique Gil", "Alvaro Ortiz", 
         "Emilio Valero", "Diego Rodenas"
         ]
-
-        for i in llistaJugadorsPrebenjamin:
-            boxJuagdors.addItem(i)
-
-        layoutJugadors.addWidget(labelJugadors)
-        layoutJugadors.addWidget(boxJuagdors)
+        self.layoutJugadors.addWidget(self.labelJugadors)
+        self.boxEquips.currentTextChanged.connect(self.comprovarEquip)
+        
+        self.layoutJugadors.addWidget(self.boxJuagdors)
 
         #Boto
         labelEstadistica = QLabel("Estadistica de jugadores")
@@ -199,7 +168,7 @@ class User(QMainWindow):
         layoutUser.addWidget(centralWidget)
         layoutUser.addLayout(layoutTopSide)
         layoutTopSide.addLayout(layoutEquips)
-        layoutTopSide.addLayout(layoutJugadors)
+        layoutTopSide.addLayout(self.layoutJugadors)
         layoutTopSide.addLayout(layoutBoto)
 
 
@@ -225,13 +194,32 @@ class User(QMainWindow):
             pass
     
     def checkInEstadistica(self):
-        self.hide()
+        print(self.boxJuagdors.currentText())
         self.estadistica.show()
 
     def finestraAbout(self):
-        self.hide()
-        #self.aboutFinestra.show()
+        self.aboutFinestra.show()
 
+    def comprovarEquip(self, t):
+        if t == "Prebenjamin A":
+            self.boxJuagdors.clear()
+            for i in self.llistaJugadorsPrebenjamin:
+                self.boxJuagdors.addItem(i)
+
+        elif t == "Alevin B":
+            self.boxJuagdors.clear()
+            for i in self.llistaJugadorsAlevin:
+                self.boxJuagdors.addItem(i)
+    
+    def nomBoxJugadors(self):
+        return self.boxJuagdors.currentText()
+    
+    def comprovarGuardar(self):
+        if self.estadistica.xeu:
+            print(self.estadistica.boxJornadas.currentText())
+                
+
+#user = User()
 
 # Pantalla de registrarse
 class Register(QMainWindow):
@@ -241,11 +229,7 @@ class Register(QMainWindow):
 
         self.setWindowTitle("Register")
 
-        # Llista on guardem el usuaris
-        self.llista_usuaris = []
-
-        # Llista on guardem les contrasenyes
-        self.llista_passwd = []
+        
 
         layout_register = QVBoxLayout()
         self.label_register = QLabel("", self)
@@ -322,71 +306,89 @@ class Estadistica(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Estadisticas")
         #self.user = User()
 
+        self.setWindowTitle("Estadisticas")
+        
         layout = QVBoxLayout()
 
         # Jornades
         labelJornades = QLabel()
         labelJornades.setText("Jornadas")
 
-        boxJornadas = QComboBox()
+        self.boxJornadas = QComboBox()
         listaJornadas = ["1", "2", "3", "4", "5"]
         # listaJornadas(range(1, 21))
 
         for i in listaJornadas:
-            boxJornadas.addItem("Jornada " + i)
+            self.boxJornadas.addItem("Jornada " + i)
 
         layout.addWidget(labelJornades)
-        layout.addWidget(boxJornadas)
+        layout.addWidget(self.boxJornadas)
 
         # Goles
         labelGoles = QLabel("Goles:")
-        spinGoles = QSpinBox()
-        spinGoles.setMaximum(15)
-        spinGoles.setMinimum(0)
+        self.spinGoles = QSpinBox()
+        self.spinGoles.setMaximum(15)
+        self.spinGoles.setMinimum(0)
 
         layout.addWidget(labelGoles)
-        layout.addWidget(spinGoles)
+        layout.addWidget(self.spinGoles)
         
         # Minutos
         labelMinutos = QLabel("Minutos jugados:")
-        spinMinutos = QSpinBox()
-        spinMinutos.setMaximum(50)
-        spinMinutos.setMinimum(0)
+        self.spinMinutos = QSpinBox()
+        self.spinMinutos.setMaximum(50)
+        self.spinMinutos.setMinimum(0)
 
         layout.addWidget(labelMinutos)
-        layout.addWidget(spinMinutos)
+        layout.addWidget(self.spinMinutos)
 
         # Actitud
         labelActitud = QLabel("Actitud:")
-        actitud = QSpinBox()
-        actitud.setMaximum(5)
-        actitud.setMinimum(1)
+        self.actitud = QSpinBox()
+        self.actitud.setMaximum(5)
+        self.actitud.setMinimum(1)
 
         layout.addWidget(labelActitud)
-        layout.addWidget(actitud)
+        layout.addWidget(self.actitud)
 
         # Creem el botó de guardar
-        buttonGuardar = QPushButton("Guardar")
-        layout.addWidget(buttonGuardar)
-        buttonGuardar.clicked.connect(self.guardar)
-
+        self.buttonGuardar = QPushButton("Guardar")
+        layout.addWidget(self.buttonGuardar)
+        self.buttonGuardar.clicked.connect(self.guardar)
 
         widget = QWidget()
         widget.setLayout(layout)
         self.setCentralWidget(widget)
     
+    def agarrarNomBoxJugador(self):
+        return User().boxJuagdors.currentText()
+    
     def guardar(self):
+        self.xeu = True
         self.hide()
-        #self.user.show()
+        miConexion = mysql.connector.connect(host='localhost', 
+                                            user= 'root', 
+                                            passwd='1234', 
+                                            db='estadistiques')
+        print("Conexio correcta")
+        print(self.boxJornadas.currentText())
+        print(self.spinGoles.text())
+        print(self.spinMinutos.text())
+        print(self.actitud.text())
+        #print(self.boxJuga.currentText())
+        #print(User().boxJuagdors.currentText())
+        #print(Estadistica().agarrarNomBoxJugador())
+        User().comprovarGuardar()
+        cur = miConexion.cursor()
+        # sql_insert = "INSERT INTO jornadaJugador (goles, minutos, actitud) VALUES (?, ?, ?) WHERE jornada = ? and nomJugador = ?", (self.spinGoles.text(), self.spinMinutos.text(), self.actitud.text())
+        # val = (self.spinGoles.text(), self.spinMinutos.text(), self.actitud.text())
+
 
 class About(QMainWindow):
     def __init__(self):
         super().__init__()
-
-        self.user = User()
 
         self.setWindowTitle("About")
         layoutAbout = QVBoxLayout()
@@ -410,7 +412,6 @@ class About(QMainWindow):
     
     def tornarUser(self):
         self.hide()
-        self.user.show()
         
         
 
@@ -419,13 +420,19 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Login")
+        self.setWindowTitle("App Futbol")
 
         self.user = User()
         self.admin = Admin()
         self.register = Register()
 
         layout = QVBoxLayout()
+
+        # Llista on guardem el usuaris
+        self.llista_usuaris = ["carles", "ruben"]
+
+        # Llista on guardem les contrasenyes
+        self.llista_passwd = ["1234", "5678"]
 
         self.label = QLabel("", self)
 
@@ -476,7 +483,19 @@ class MainWindow(QMainWindow):
             self.user.show()
         else:
             self.label.setText("Nom d'usuari o contrasenya incorrectes")
-    
+
+        # for i in self.llista_usuaris:
+        #     if (self.usuari.text() == i):
+        #         indexUsuari = self.llista_usuaris.index(i)
+        #         for j in self.llista_passwd:
+        #             if (self.passwd.text() == j[indexUsuari]):
+        #                 self.hide()
+        #                 self.user.show()
+        #             else:
+        #                 print("Contrasenya incorrecta")
+        #     else:
+        #         print("Nombre de usuario incorrecto")
+
     #  Eixir
     def exit(self):
         dlg = DialogExit()
